@@ -2,7 +2,9 @@
 Develop by Alberto
 email: albertobsd@gmail.com
 */
-
+#include <algorithm>
+#include <vector>
+#include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -132,6 +134,46 @@ Point _2Gn;
 std::vector<Point> GSn;
 Point _2GSn;
 
+bool is_candidate_key(const Int& key) {
+    char hex[65];
+    key.GetHex(hex);
+
+    std::string s(hex);
+    std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+    // Rule 1: no triple consecutive identical characters
+    for (size_t i = 0; i + 2 < s.length(); i++) {
+        if (s[i] == s[i+1] && s[i] == s[i+2])
+            return false;
+    }
+
+    // Rule 2: prohibited double repeats
+    static const std::vector<std::string> prohibited = {"66", "99", "aa", "dd"};
+    for (const auto& p : prohibited) {
+        if (s.find(p) != std::string::npos)
+            return false;
+    }
+
+    // Rule 3: at most one double pair
+    int doubleCount = 0;
+    for (size_t i = 0; i + 1 < s.length(); i++) {
+        if (s[i] == s[i+1]) {
+            doubleCount++;
+            if (doubleCount > 1) return false;
+            i++;
+        }
+    }
+
+    // Rule 4: max 2 occurrences per character
+    int counts[256] = {0};
+    for (char c : s) {
+        counts[(unsigned char)c]++;
+        if (counts[(unsigned char)c] > 2)
+            return false;
+    }
+
+    return true;
+}
 void menu();
 void init_generator();
 
